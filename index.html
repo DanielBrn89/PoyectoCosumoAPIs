@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demostración TI - Inicio</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #06273d; margin: 0; padding: 0; color: #fdfcfc; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        .header { text-align: center; margin-bottom: 40px; padding: 20px; }
+        .container { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; max-width: 900px; }
+        
+        /* Estilos de las tarjetas-enlace */
+        .nav-card { background: rgb(255, 255, 255); border-radius: 12px; padding: 40px 30px; width: 300px; text-align: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); text-decoration: none; color: #333; transition: transform 0.3s, box-shadow 0.3s; border-top: 5px solid transparent; }
+        .nav-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
+        
+        .card-rest { border-top-color: #e01818; }
+        .card-soap { border-top-color: #0056b3; }
+        
+        h2 { margin: 15px 0 10px; font-size: 24px; }
+        .rest-title { color: #e01818; }
+        .soap-title { color: #0056b3; }
+        p { color: #666; line-height: 1.5; }
+        
+        .icon { width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: white; margin-bottom: 15px;}
+        .icon-rest { background-color: #e01818; }
+        .icon-soap { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Arquitecturas de Integración de TI</h1>
+        <p>Seleccione el protocolo que desea demostrar:</p>
+    </div>
+
+    <div class="container">
+        <a href="rest.html" class="nav-card card-rest">
+            <div class="icon icon-rest">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12,2C17.5,2 22,6.5 22,12C22,17.5 17.5,22 12,22C6.5,22 2,17.5 2,12C2,6.5 6.5,2 12,2M12,4C7.58,4 4,7.58 4,12C4,16.42 7.58,20 12,20C16.42,20 20,16.42 20,12C20,7.58 16.42,4 12,4Z" /></svg>
+            </div>
+            <h2 class="rest-title">API REST</h2>
+            <p>Demostración de consumo de datos en formato JSON usando la arquitectura RESTful.</p>
+        </a>
+
+        <a href="soap.html" class="nav-card card-soap">
+            <div class="icon icon-soap">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M17,17V15H13V13H17V11H13V9H17V7H11V19H13V17H17M19,17A2,2 0 0,0 21,15V11A2,2 0 0,0 19,9V7C19,5.89 18.1,5 17,5H11A2,2 0 0,0 9,7V11H11V9H13V11H11A2,2 0 0,0 9,13V17A2,2 0 0,0 11,19H17A2,2 0 0,0 19,17Z" /></svg>
+            </div>
+            <h2 class="soap-title">API SOAP</h2>
+            <p>Demostración de envío y recepción de mensajes estrictos en formato XML mediante WSDL.</p>
+        </a>
+    </div>
+
+</body>
+</html>

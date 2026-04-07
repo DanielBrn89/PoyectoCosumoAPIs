@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demostración - REST Películas</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 900px; margin-bottom: 20px; position: relative; }
+        
+        .btn-back { display: inline-block; margin-bottom: 20px; color: #666; text-decoration: none; font-weight: bold; padding: 10px 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; }
+        .btn-back:hover { background: #e2e6ea; color: #333; }
+
+        .main-card { background: white; border-radius: 12px; padding: 30px; width: 100%; max-width: 900px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        h1.title { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-top: 0; color: #e50914; font-size: 28px;}
+        
+        button#btnConsultar { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; background-color: #e50914; color: white; font-size: 16px; margin-bottom: 20px; transition: 0.3s;}
+        button#btnConsultar:hover { background-color: #b20710; }
+        
+        /* Contenedor tipo Grid para las tarjetas */
+        .cards-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; display: none;}
+        
+        /* Estilo de cada tarjeta de película */
+        .movie-card { 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px solid #eee; 
+            background-color: #fafafa; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            transition: 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        .movie-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-color: #e50914;}
+        
+        .movie-card::after {
+            content: '🔍 Clic para ver JSON crudo';
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 10px;
+            color: #aaa;
+            opacity: 0;
+            transition: 0.3s;
+        }
+        .movie-card:hover::after { opacity: 1; }
+
+        .movie-header { display: flex; gap: 15px; align-items: center; }
+        
+        /* Estilos para el póster */
+        .movie-poster { width: 60px; height: 90px; object-fit: cover; border-radius: 6px; flex-shrink: 0; box-shadow: 0 3px 6px rgba(0,0,0,0.15); background-color: #111;}
+        
+        .movie-info h3 { margin: 0; color: #e50914; font-size: 16px;}
+        .movie-info p { margin: 2px 0 0; color: #666; font-size: 12px;}
+        
+        /* Loader */
+        .loader { display: none; text-align: center; font-style: italic; color: #666; margin: 20px 0; }
+
+        /* Estilos del Modal (Caja negra del JSON) */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.open { display: flex; opacity: 1; }
+        .modal-content { background-color: #272822; color: #f8f8f2; padding: 30px; border-radius: 12px; width: 80%; max-width: 650px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.3); transform: translateY(-20px); transition: transform 0.3s ease;}
+        .modal.open .modal-content { transform: translateY(0); }
+        .close-button { position: absolute; top: 15px; right: 20px; color: #aaa; font-size: 30px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .close-button:hover { color: white; }
+        .modal h3 { color: #a6e22e; margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 15px; font-size: 18px;}
+        .modal pre { font-family: monospace; font-size: 13px; margin: 0; white-space: pre-wrap;}
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html" class="btn-back">⬅ Volver al Menú Principal</a>
+    </div>
+
+    <div class="main-card">
+        <h1 class="title">Catálogo de Películas (API REST)</h1>
+        <p>Demostración de consumo de la API <strong>All In One API</strong>. Haga clic en una película para ver su respuesta JSON cruda y analizar la estructura de datos.</p>
+        
+        <button id="btnConsultar" onclick="llamarAPIREST()">Consultar Catálogo (GET)</button>
+        
+        <div id="loader-rest" class="loader">Obteniendo datos...</div>
+        
+        <div id="tarjetas-peliculas" class="cards-container"></div>
+    </div>
+
+    <div id="jsonModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="cerrarModal()">&times;</span>
+            <h3 id="modal-title-movie">JSON Crudo</h3>
+            <pre id="modal-json-text"></pre>
+        </div>
+    </div>
+
+    <script>
+        let rawApiData = [];
+
+        function llamarAPIREST() {
+            const urlRest = 'https://allinoneapi.vercel.app/movies';
+            
+            const contTarjetas = document.getElementById('tarjetas-peliculas');
+            const btn = document.getElementById('btnConsultar');
+            const loader = document.getElementById('loader-rest');
+            
+            contTarjetas.style.display = "none";
+            contTarjetas.innerHTML = "";
+            btn.disabled = true;
+            btn.innerText = "Consultando Catálogo...";
+            loader.style.display = "block";
+
+            fetch(urlRest)
+                .then(respuesta => {
+                    if (!respuesta.ok) throw new Error("Error en la conexión con la API");
+                    return respuesta.json(); 
+                }) 
+                .then(datos => {
+                    loader.style.display = "none";
+                    btn.disabled = false;
+                    btn.innerText = "Consultar Catálogo (GET)";
+
+                    rawApiData = datos;
+                    let htmlTarjetas = "";
+                    
+                    const peliculasLimitadas = datos.slice(0, 10);
+
+                    peliculasLimitadas.forEach((pelicula, index) => { 
+                        const titulo = pelicula.title || pelicula.name || pelicula.titulo || 'Película Desconocida';
+                        const año = pelicula.year || pelicula.releaseYear || 'N/A';
+                        const director = pelicula.director || 'N/A';
+                        
+                        // --- SOLUCIÓN: Agregamos pelicula.img a la búsqueda ---
+                        let imagenUrl = pelicula.img || pelicula.poster_path || pelicula.imageUrl || pelicula.posterUrl || pelicula.poster || pelicula.image || '';
+                        
+                        // SANITIZACIÓN
+                        if (imagenUrl.startsWith('/')) {
+                            imagenUrl = 'https://image.tmdb.org/t/p/w500' + imagenUrl;
+                        }
+
+                        // FALLBACK
+                        const imgRespaldo = 'https://placehold.co/60x90/111111/FFFFFF?text=Sin+Foto';
+                        
+                        if (!imagenUrl) {
+                            imagenUrl = imgRespaldo;
+                        }
+
+                        htmlTarjetas += `
+                            <div class="movie-card" onclick="mostrarJson(${index})" title="Ver JSON crudo">
+                                <div class="movie-header">
+                                    <img src="${imagenUrl}" 
+                                         class="movie-poster" 
+                                         alt="Póster" 
+                                         onerror="this.onerror=null; this.src='${imgRespaldo}';">
+                                    <div class="movie-info">
+                                        <h3>${titulo}</h3>
+                                        <p><strong>Estreno:</strong> ${año}</p>
+                                        <p><strong>Director:</strong> ${director}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    contTarjetas.innerHTML = htmlTarjetas;
+                    contTarjetas.style.display = "grid"; 
+                })
+                .catch(error => {
+                    loader.style.display = "none";
+                    contTarjetas.innerHTML = "<p style='color:red; font-weight:bold; text-align:center;'>Error de red o API caída: " + error.message + "</p>";
+                    contTarjetas.style.display = "block";
+                    btn.disabled = false;
+                    btn.innerText = "Reintentar Consulta";
+                });
+        }
+
+        // Funciones del Modal (Caja negra del JSON crudo)
+        function mostrarJson(index) {
+            const pelicula = rawApiData[index];
+            if(!pelicula) return; 
+
+            const jsonFormateado = JSON.stringify(pelicula, null, 4);
+            const tituloModal = pelicula.title || pelicula.name || pelicula.titulo || 'la Película';
+
+            document.getElementById('modal-title-movie').innerText = `Objeto JSON Crudo de: ${tituloModal}`;
+            document.getElementById('modal-json-text').textContent = jsonFormateado;
+
+            const modal = document.getElementById('jsonModal');
+            modal.classList.add('open');
+        }
+
+        function cerrarModal() {
+            const modal = document.getElementById('jsonModal');
+            modal.classList.remove('open');
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('jsonModal');
+            if (event.target == modal) {
+                cerrarModal();
+            }
+        }
+    </script>
+</body>
+</html>

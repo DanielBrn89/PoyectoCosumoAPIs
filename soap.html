@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demostración - SOAP</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f3f5; margin: 0; padding: 20px; color: #333; display: flex; flex-direction: column; align-items: center; }
+        .header { width: 100%; max-width: 800px; margin-bottom: 20px; position: relative; }
+        
+        .btn-back { display: inline-block; margin-bottom: 20px; color: #666; text-decoration: none; font-weight: bold; padding: 10px 15px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; }
+        .btn-back:hover { background: #e2e6ea; color: #333; }
+
+        .card { background: white; border-radius: 12px; padding: 30px; width: 100%; max-width: 800px; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        h2 { border-bottom: 2px solid #eee; padding-bottom: 15px; margin-top: 0; color: #0056b3; }
+        
+        .input-group { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        input[type="text"] { padding: 12px; border: 2px solid #eee; border-radius: 8px; width: 150px; font-size: 16px; outline: none; text-transform: uppercase; font-weight: bold; text-align: center;}
+        button { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; background-color: #0056b3; color: white; font-size: 16px; }
+        button:hover { background-color: #004494; }
+        
+        #resultado-visual-soap { display: none; margin-top: 20px; padding: 20px; border-radius: 8px; border: 1px solid #b8daff; background-color: #cce5ff;}
+        .country-display { font-size: 18px; color: #004085; display: flex; align-items: center; gap: 20px;}
+        .country-display span { font-weight: bold; color: #002752;}
+        .flag-img { width: 120px; border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        
+        /* Estilo para el bloque de código XML */
+        .xml-container { display: none; margin-top: 30px; background-color: #272822; color: #f8f8f2; padding: 20px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 13px; white-space: pre-wrap; word-wrap: break-word;}
+        .xml-container h3 { color: #66d9ef; margin-top: 0; border-bottom: 1px solid #555; padding-bottom: 10px;}
+
+        .loader { display: none; text-align: center; font-style: italic; color: #666; margin: 20px 0; }
+        .hint { font-size: 13px; color: #777; margin-top: -10px; margin-bottom: 20px; display: block;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="index.html" class="btn-back">⬅ Volver al Menú Principal</a>
+    </div>
+
+    <div class="card">
+        <h2>Servicio de Información Geográfica (SOAP)</h2>
+        <p>Consulta los datos oficiales de un país enviando su código ISO (2 letras).</p>
+        <span class="hint">Ejemplos de códigos: GT (Guatemala), MX (México), ES (España), JP (Japón).</span>
+        
+        <div class="input-group">
+            <input type="text" id="inputIso" value="GT" maxlength="2">
+            <button onclick="llamarAPISOAP()">Consultar País (POST)</button>
+        </div>
+        
+        <div id="loader-soap" class="loader">Enviando contrato WSDL al servidor...</div>
+        
+        <div id="resultado-visual-soap"></div>
+
+        <div id="codigo-xml" class="xml-container">
+            <h3>Respuesta Cruda de la API (XML)</h3>
+            <pre id="xml-raw"></pre>
+        </div>
+    </div>
+
+    <script>
+        function llamarAPISOAP() {
+            const isoCode = document.getElementById('inputIso').value.toUpperCase();
+            
+            const urlReal = 'http://webservices.oorsprong.org/websamples.countryinfo/CountryInfoService.wso';
+            const urlSoap = 'https://corsproxy.io/?' + encodeURIComponent(urlReal);
+            
+            const contVisual = document.getElementById('resultado-visual-soap');
+            const contXml = document.getElementById('codigo-xml');
+            const rawXml = document.getElementById('xml-raw');
+
+            contVisual.innerHTML = "";
+            contVisual.style.display = "none";
+            contXml.style.display = "none";
+            document.getElementById('loader-soap').style.display = "block";
+
+            const xmlEnvio = `<?xml version="1.0" encoding="utf-8"?>
+            <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+              <soap:Body>
+                <FullCountryInfo xmlns="http://www.oorsprong.org/websamples.countryinfo">
+                  <sCountryISOCode>${isoCode}</sCountryISOCode>
+                </FullCountryInfo>
+              </soap:Body>
+            </soap:Envelope>`;
+
+            fetch(urlSoap, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/xml; charset=utf-8',
+                },
+                body: xmlEnvio
+            })
+            .then(respuesta => {
+                if(!respuesta.ok) throw new Error("Error HTTP " + respuesta.status);
+                return respuesta.text();
+            }) 
+            .then(xmlStr => {
+                document.getElementById('loader-soap').style.display = "none";
+                
+                // 1. Mostrar el XML crudo
+                rawXml.textContent = xmlStr;
+                contXml.style.display = "block";
+
+                // 2. Parsear el XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
+                
+                // FUNCIÓN CLAVE: Busca la etiqueta con el prefijo "m:" o sin él para evitar errores
+                function obtenerValor(etiqueta) {
+                    const nodo = xmlDoc.getElementsByTagName("m:" + etiqueta)[0] || xmlDoc.getElementsByTagName(etiqueta)[0];
+                    return nodo ? nodo.textContent : "Desconocido";
+                }
+
+                // Extraemos los datos usando nuestra función segura
+                const nombre = obtenerValor("sName");
+                const capital = obtenerValor("sCapitalCity");
+                const moneda = obtenerValor("sCurrencyISOCode");
+                const codigoTel = obtenerValor("sPhoneCode");
+                const urlBandera = obtenerValor("sCountryFlag");
+                
+                if (nombre.includes("Country not found")) {
+                    throw new Error("El código de país no existe. Intenta con GT, MX o US.");
+                }
+
+                // 3. Mostrar el resultado de forma visual (¡Ahora con la bandera!)
+                contVisual.innerHTML = `
+                    <p style="margin:0 0 10px 0; text-align:center;">Información procesada desde el XML:</p>
+                    <div class="country-display">
+                        <div>
+                            <img src="${urlBandera}" alt="Bandera de ${nombre}" class="flag-img" onerror="this.style.display='none'">
+                        </div>
+                        <div>
+                            <p style="margin-top: 0;">📍 País: <span>${nombre}</span></p>
+                            <p>🏛️ Capital: <span>${capital}</span></p>
+                            <p>💰 Moneda: <span>${moneda}</span></p>
+                            <p>📞 Código Telefónico: <span>+${codigoTel}</span></p>
+                        </div>
+                    </div>
+                `;
+                contVisual.style.display = "block";
+                
+            })
+            .catch(error => {
+                document.getElementById('loader-soap').style.display = "none";
+                contVisual.innerHTML = "<p style='color:red;'><strong>Error:</strong> " + error.message + "</p>";
+                contVisual.style.display = "block";
+            });
+        }
+    </script>
+</body>
+</html>

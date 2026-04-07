@@ -1,0 +1,63 @@
+# Archivos del sistema Windows
+Thumbs.db
+*.tmp
+*.log
+
+# Directorios temporales
+temp/
+tmp/
+
+# Archivos de configuración personal
+.gitconfig
+.bash_history
+.lesshst
+
+# Directorios del usuario
+AppData/
+Documents/
+Downloads/
+Music/
+Videos/
+Pictures/
+Desktop/
+Favorites/
+Contacts/
+Searches/
+Links/
+Saved Games/
+
+# Otros
+3D Objects/
+Cisco Packet Tracer*/
+docker-lamp/
+gestion-expedientes-api/
+ntuser.*
+NTUSER.*
+para el portafolio/
+portafolio-tareas/
+pseint/
+tarea-diseno/
+
+# Cache y configuraciones
+.cache/
+.codegpt/
+.copilot/
+.docker/
+.nuget/
+.packettracer
+.schoolsplay.rc/
+.vscode/
+IntelGraphicsProfiles/
+WPS Cloud Files/
+
+# Configuración local
+Configuración local/
+Cookies/
+Datos de programa/
+Entorno de red/
+Impresoras/
+Menú Inicio/
+Mis documentos/
+Plantillas/
+Reciente/
+SendTo/
