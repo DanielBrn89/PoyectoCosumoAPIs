@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/soap",
+      "destination": "http://webservices.oorsprong.org/websamples.countryinfo/CountryInfoService.wso"
+    }
+  ]
+}

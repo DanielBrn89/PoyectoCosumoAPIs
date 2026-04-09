@@ -65,8 +65,8 @@
         function llamarAPISOAP() {
             const isoCode = document.getElementById('inputIso').value.toUpperCase();
             
-            const urlReal = 'http://webservices.oorsprong.org/websamples.countryinfo/CountryInfoService.wso';
-            const urlSoap = 'https://corsproxy.io/?' + encodeURIComponent(urlReal);
+         
+            const urlSoap = '/api/soap'; 
             
             const contVisual = document.getElementById('resultado-visual-soap');
             const contXml = document.getElementById('codigo-xml');
