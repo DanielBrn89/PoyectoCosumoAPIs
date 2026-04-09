@@ -65,7 +65,7 @@
         function llamarAPISOAP() {
             const isoCode = document.getElementById('inputIso').value.toUpperCase();
             
-         
+            // Usamos la ruta interna de Vercel que configuraste previamente
             const urlSoap = '/api/soap'; 
             
             const contVisual = document.getElementById('resultado-visual-soap');
@@ -100,21 +100,17 @@
             .then(xmlStr => {
                 document.getElementById('loader-soap').style.display = "none";
                 
-                // 1. Mostrar el XML crudo
                 rawXml.textContent = xmlStr;
                 contXml.style.display = "block";
 
-                // 2. Parsear el XML
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(xmlStr, "text/xml");
                 
-                // FUNCIÓN CLAVE: Busca la etiqueta con el prefijo "m:" o sin él para evitar errores
                 function obtenerValor(etiqueta) {
                     const nodo = xmlDoc.getElementsByTagName("m:" + etiqueta)[0] || xmlDoc.getElementsByTagName(etiqueta)[0];
                     return nodo ? nodo.textContent : "Desconocido";
                 }
 
-                // Extraemos los datos usando nuestra función segura
                 const nombre = obtenerValor("sName");
                 const capital = obtenerValor("sCapitalCity");
                 const moneda = obtenerValor("sCurrencyISOCode");
@@ -125,12 +121,19 @@
                     throw new Error("El código de país no existe. Intenta con GT, MX o US.");
                 }
 
-                // 3. Mostrar el resultado de forma visual (¡Ahora con la bandera!)
+                // --- SOLUCIÓN PARA CONTENIDO MIXTO EN VERCEL ---
+                // Si la URL es http://, la pasamos por el proxy seguro de Weserv
+                let urlBanderaSegura = urlBandera;
+                if (urlBandera.startsWith('http://')) {
+                    // Quitamos el http:// original y le pegamos el CDN seguro
+                    urlBanderaSegura = 'https://wsrv.nl/?url=' + urlBandera.replace('http://', '');
+                }
+
                 contVisual.innerHTML = `
                     <p style="margin:0 0 10px 0; text-align:center;">Información procesada desde el XML:</p>
                     <div class="country-display">
                         <div>
-                            <img src="${urlBandera}" alt="Bandera de ${nombre}" class="flag-img" onerror="this.style.display='none'">
+                            <img src="${urlBanderaSegura}" alt="Bandera de ${nombre}" class="flag-img" onerror="this.style.display='none'">
                         </div>
                         <div>
                             <p style="margin-top: 0;">📍 País: <span>${nombre}</span></p>
